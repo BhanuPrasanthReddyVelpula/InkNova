@@ -35,9 +35,28 @@ export const streamBook = async (req, res) => {
     const { id } = req.params;
 
     const book = await Book.findById(id);
-    if (!book) return res.status(404).json({ message: "Book not found" });
+    if (!book) {
+      return res.status(404).json({ message: "Book not found" });
+    }
 
-    const user = await User.findById(req.user._id);
+    // Instead of protect middleware,
+    // manually verify token if present
+
+    let user = null;
+
+    if (req.headers.authorization) {
+      try {
+        const token = req.headers.authorization.split(" ")[1];
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        user = await User.findById(decoded.id);
+      } catch (err) {
+        user = null;
+      }
+    }
+
+    if (!user) {
+      return res.status(401).json({ message: "No token" });
+    }
 
     const now = new Date();
 
@@ -51,16 +70,12 @@ export const streamBook = async (req, res) => {
       return res.status(403).json({ message: "Access denied" });
     }
 
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", "inline");
-
-    https.get(book.pdfUrl, (pdfRes) => {
-      pdfRes.pipe(res);
-    });
+    // 🔥 Redirect directly to Cloudinary
+    return res.redirect(book.pdfUrl);
 
   } catch (error) {
     console.error("Stream error:", error);
-    res.status(500).json({ message: "Streaming failed" });
+    res.status(500).json({ message: error.message });
   }
 };
 
