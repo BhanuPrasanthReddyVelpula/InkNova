@@ -1,7 +1,8 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "https://inknova-1-7j3i.onrender.com/api",
+  //baseURL: "http://localhost:5000/api" for local use...
+  baseURL: "http://localhost:5000/api",
 });
 
 API.interceptors.request.use((req) => {
