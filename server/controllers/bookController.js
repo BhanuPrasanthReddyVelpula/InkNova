@@ -82,26 +82,28 @@ export const streamBook = async (req, res) => {
 // Unlock Book (Ad-based)
 export const unlockBook = async (req, res) => {
   try {
-    const { id } = req.params;
-
-    if (!req.user) {
-      return res.status(401).json({ message: "Not authorized" });
-    }
-
     const user = await User.findById(req.user._id);
 
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+    const bookId = req.params.id;
+
+    const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
+
+    // Remove old unlock if exists
+    user.adUnlocks = user.adUnlocks.filter(
+      (unlock) => unlock.book.toString() !== bookId
+    );
 
     user.adUnlocks.push({
-      book: id,
-      expiresAt: new Date(Date.now() + 30 * 60 * 1000),
+      book: bookId,
+      expiresAt,
     });
 
     await user.save();
 
-    res.json({ message: "Book unlocked for 30 minutes" });
+    res.json({
+      message: "Book unlocked",
+      adUnlocks: user.adUnlocks,
+    });
 
   } catch (error) {
     console.error("Unlock error:", error);

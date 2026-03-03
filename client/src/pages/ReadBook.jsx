@@ -33,12 +33,13 @@ function ReadBook() {
 
   const unlockBook = async () => {
   try {
-    await API.post(`/books/unlock/${id}`);
+    const { data } = await API.post(`/books/unlock/${id}`);
 
-    const { data } = await API.get("/auth/me");
-
-    localStorage.setItem("user", JSON.stringify(data));
-    setUser(data);
+    // Update user in context immediately
+    setUser((prev) => ({
+      ...prev,
+      adUnlocks: data.adUnlocks,
+    }));
 
   } catch (error) {
     console.error("Unlock failed:", error);

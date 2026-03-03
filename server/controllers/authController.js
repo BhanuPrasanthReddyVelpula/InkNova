@@ -87,18 +87,20 @@ export const login = async (req, res) => {
 };
 
 export const activateSubscriptionController = async (req, res) => {
-  console.log("REQ.USER:", req.user);
-
   try {
     const user = await User.findById(req.user._id);
 
     user.subscriptionActive = true;
+
     await user.save();
 
-    res.json({ message: "Subscription activated" });
+    res.json({
+      message: "Subscription activated",
+      subscriptionActive: true,
+    });
 
   } catch (error) {
-    console.error(error);
+    console.error("Subscription error:", error);
     res.status(500).json({ message: error.message });
   }
 };

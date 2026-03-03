@@ -51,13 +51,12 @@ export const AuthProvider = ({ children }) => {
 
   const activateSubscription = async () => {
   try {
-    await API.post("/auth/subscribe");
+    const { data } = await API.post("/auth/subscribe");
 
-    // Fetch updated user from backend
-    const { data } = await API.get("/auth/me");
-
-    localStorage.setItem("user", JSON.stringify(data));
-    setUser(data);
+    setUser((prev) => ({
+      ...prev,
+      subscriptionActive: true,
+    }));
 
   } catch (error) {
     console.error("Subscription failed", error);
