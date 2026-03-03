@@ -82,24 +82,26 @@ export const streamBook = async (req, res) => {
 // Unlock Book (Ad-based)
 export const unlockBook = async (req, res) => {
   try {
-    if (!req.user) {
-      return res.status(401).json({ message: "No token user" });
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({ message: "User not authenticated" });
     }
 
     const user = await User.findById(req.user._id);
 
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ message: "User not found in DB" });
     }
 
     const bookId = req.params.id;
 
-    if (!user.adUnlocks) {
+    const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
+
+    // ensure array exists
+    if (!Array.isArray(user.adUnlocks)) {
       user.adUnlocks = [];
     }
 
-    const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
-
+    // remove old unlock for same book
     user.adUnlocks = user.adUnlocks.filter(
       (unlock) => unlock.book.toString() !== bookId
     );
@@ -111,13 +113,13 @@ export const unlockBook = async (req, res) => {
 
     await user.save();
 
-    return res.json({
-      message: "Book unlocked",
+    return res.status(200).json({
+      message: "Book unlocked successfully",
       adUnlocks: user.adUnlocks,
     });
 
   } catch (error) {
-    console.error("UNLOCK ERROR:", error);
+    console.error("UNLOCK CONTROLLER ERROR:", error);
     return res.status(500).json({ message: error.message });
   }
 };
