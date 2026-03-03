@@ -3,6 +3,43 @@ import { useParams } from "react-router-dom";
 import API from "../services/api";
 import { AuthContext } from "../context/AuthContext";
 
+import { Document, Page, pdfjs } from "react-pdf";
+
+pdfjs.GlobalWorkerOptions.workerSrc =
+  `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
+
+function PdfViewer({ url }) {
+  const [numPages, setNumPages] = useState(null);
+
+  return (
+    <Document
+      file={url}
+      onLoadSuccess={({ numPages }) => setNumPages(numPages)}
+    >
+      {Array.from(new Array(numPages), (el, index) => (
+        <Page key={index} pageNumber={index + 1} />
+      ))}
+    </Document>
+  );
+}
+pdfjs.GlobalWorkerOptions.workerSrc =
+  `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
+
+function PdfViewer({ url }) {
+  const [numPages, setNumPages] = useState(null);
+
+  return (
+    <Document
+      file={url}
+      onLoadSuccess={({ numPages }) => setNumPages(numPages)}
+    >
+      {Array.from(new Array(numPages), (el, index) => (
+        <Page key={index} pageNumber={index + 1} />
+      ))}
+    </Document>
+  );
+}
+
 function ReadBook() {
   const { id } = useParams();
   const { user, setUser, activateSubscription } = useContext(AuthContext);
@@ -122,13 +159,9 @@ useEffect(() => {
 
           {pdfUrl && (
             <>
-              <iframe
-                src={pdfUrl}
-                width="100%"
-                height="100%"
-                style={{ border: "none" }}
-                title="PDF Viewer"
-              />
+              <a href={pdfUrl} target="_blank" rel="noopener noreferrer">
+  Open PDF
+</a>
 
             </>
           )}
