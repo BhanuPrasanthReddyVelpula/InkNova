@@ -11,20 +11,29 @@ import bookRoutes from "./routes/bookRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import { configureCloudinary } from "./config/cloudinary.js";
 
-app.use(cors({
-  origin: "https://your-app.vercel.app",
-  credentials: true
-}));
-
 configureCloudinary();
 
 
 // ✅ CREATE APP FIRST
 const app = express();
 
+
 // ✅ MIDDLEWARE
+
+
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://ink-nova.vercel.app"
+];
+
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   credentials: true
 }));
 
@@ -50,3 +59,4 @@ app.listen(PORT, () => {
 
 console.log("Cloud Name:", process.env.CLOUDINARY_CLOUD_NAME);
 console.log("API Key:", process.env.CLOUDINARY_API_KEY);
+

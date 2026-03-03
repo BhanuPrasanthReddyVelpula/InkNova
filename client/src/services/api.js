@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "https://inknova-1-7j3i.onrender.com",
+  baseURL: "https://inknova-1-7j3i.onrender.com/api",
 });
 
 API.interceptors.request.use((req) => {
