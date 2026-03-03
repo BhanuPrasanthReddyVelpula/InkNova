@@ -11,6 +11,11 @@ import bookRoutes from "./routes/bookRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import { configureCloudinary } from "./config/cloudinary.js";
 
+app.use(cors({
+  origin: "https://your-app.vercel.app",
+  credentials: true
+}));
+
 configureCloudinary();
 
 
@@ -37,8 +42,10 @@ mongoose.connect(process.env.MONGO_URI)
   .catch(err => console.log("DB Error:", err));
 
 // ✅ START SERVER
-app.listen(5000, () => {
-  console.log("🚀 Server running on port 5000");
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
 });
 
 console.log("Cloud Name:", process.env.CLOUDINARY_CLOUD_NAME);
