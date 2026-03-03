@@ -45,6 +45,27 @@ function ReadBook() {
   }
 };
 
+useEffect(() => {
+  const fetchAccess = async () => {
+    try {
+      setLoadingPdf(true);
+
+      const { data } = await API.get(`/books/access/${id}`);
+
+      setPdfUrl(data.pdfUrl);
+
+    } catch (error) {
+      console.error("Access error:", error);
+    } finally {
+      setLoadingPdf(false);
+    }
+  };
+
+  if (user?.subscriptionActive || hasAdAccess) {
+    fetchAccess();
+  }
+}, [id, user, hasAdAccess]);
+
   useEffect(() => {
     if (user?.subscriptionActive || hasAdAccess) {
       setLoadingPdf(true);

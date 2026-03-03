@@ -108,3 +108,35 @@ export const unlockBook = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const checkBookAccess = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const book = await Book.findById(id);
+    if (!book) {
+      return res.status(404).json({ message: "Book not found" });
+    }
+
+    const user = await User.findById(req.user._id);
+
+    const now = new Date();
+
+    const hasAdAccess = user.adUnlocks?.some(
+      (unlock) =>
+        unlock.book.toString() === id &&
+        new Date(unlock.expiresAt) > now
+    );
+
+    if (!user.subscriptionActive && !hasAdAccess) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    // 🔥 Return Cloudinary URL
+    res.json({ pdfUrl: book.pdfUrl });
+
+  } catch (error) {
+    console.error("Access error:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
