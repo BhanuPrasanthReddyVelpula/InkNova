@@ -1,22 +1,34 @@
 import { createContext, useState, useEffect } from "react";
 import API from "../services/api";
 
-export const AuthContext = createContext(null);
+export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
 
+  // Load user from localStorage on refresh
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
-
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
-
-    setLoading(false);
   }, []);
 
+  // =====================
+  // REGISTER
+  // =====================
+  const register = async (formData) => {
+    const { data } = await API.post("/auth/register", formData);
+
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("user", JSON.stringify(data));
+
+    setUser(data);
+  };
+
+  // =====================
+  // LOGIN
+  // =====================
   const login = async (formData) => {
     const { data } = await API.post("/auth/login", formData);
 
@@ -26,15 +38,41 @@ export const AuthProvider = ({ children }) => {
     setUser(data);
   };
 
+  // =====================
+  // LOGOUT
+  // =====================
   const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     setUser(null);
   };
 
+///activateSubscription 
+
+  const activateSubscription = async () => {
+  try {
+    await API.post("/auth/subscribe");
+
+    // Fetch updated user from backend
+    const { data } = await API.get("/auth/me");
+
+    localStorage.setItem("user", JSON.stringify(data));
+    setUser(data);
+
+  } catch (error) {
+    console.error("Subscription failed", error);
+  }
+};
+
   return (
     <AuthContext.Provider
-      value={{ user, setUser, login, logout, loading }}
+      value={{
+        user,
+        register,
+        login,
+        logout,
+        activateSubscription,
+      }}
     >
       {children}
     </AuthContext.Provider>

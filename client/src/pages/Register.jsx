@@ -10,23 +10,38 @@ function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setErrorMessage("");
 
     if (password !== confirmPassword) {
-      alert("Passwords do not match");
+      setErrorMessage("Passwords do not match");
+      return;
+    }
+
+    if (password.length < 6) {
+      setErrorMessage("Password must be at least 6 characters");
       return;
     }
 
     setLoading(true);
 
     try {
-      await register({ name, email, password });
-      navigate("/"); // Redirect to home after registration
+      await register({
+        name,
+        email,
+        password,
+      });
+
+      navigate("/"); // Redirect after success
     } catch (error) {
-      alert(error.response?.data?.message || "Registration failed");
+      setErrorMessage(
+        error.response?.data?.message || "Registration failed"
+      );
     } finally {
       setLoading(false);
     }
@@ -43,7 +58,12 @@ function Register() {
           Create Account
         </h2>
 
-        {/* Name */}
+        {errorMessage && (
+          <div className="bg-red-500 text-white p-2 mb-4 rounded text-sm text-center">
+            {errorMessage}
+          </div>
+        )}
+
         <input
           type="text"
           placeholder="Full Name"
@@ -53,7 +73,6 @@ function Register() {
           className="w-full mb-4 p-3 rounded-lg bg-black border border-neonBlue focus:outline-none focus:ring-2 focus:ring-neonPink transition"
         />
 
-        {/* Email */}
         <input
           type="email"
           placeholder="Email"
@@ -63,7 +82,6 @@ function Register() {
           className="w-full mb-4 p-3 rounded-lg bg-black border border-neonBlue focus:outline-none focus:ring-2 focus:ring-neonPink transition"
         />
 
-        {/* Password */}
         <input
           type="password"
           placeholder="Password"
@@ -73,7 +91,6 @@ function Register() {
           className="w-full mb-4 p-3 rounded-lg bg-black border border-neonBlue focus:outline-none focus:ring-2 focus:ring-neonPink transition"
         />
 
-        {/* Confirm Password */}
         <input
           type="password"
           placeholder="Confirm Password"
@@ -83,7 +100,6 @@ function Register() {
           className="w-full mb-6 p-3 rounded-lg bg-black border border-neonBlue focus:outline-none focus:ring-2 focus:ring-neonPink transition"
         />
 
-        {/* Register Button */}
         <button
           type="submit"
           disabled={loading}
@@ -92,14 +108,12 @@ function Register() {
           {loading ? "Creating Account..." : "Register"}
         </button>
 
-        {/* Divider */}
         <div className="flex items-center my-6">
           <div className="flex-grow h-px bg-gray-700"></div>
           <span className="px-3 text-gray-400 text-sm">OR</span>
           <div className="flex-grow h-px bg-gray-700"></div>
         </div>
 
-        {/* Login Link */}
         <p className="text-center text-gray-400 text-sm">
           Already have an account?
         </p>
@@ -110,7 +124,6 @@ function Register() {
         >
           Login Here
         </Link>
-
       </form>
     </div>
   );

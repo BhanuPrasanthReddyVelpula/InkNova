@@ -3,43 +3,37 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import sendEmail from "../utils/sendEmail.js";
 
-// REGISTER WITH OTP
+const generateToken = (id) => {
+  return jwt.sign({ id }, process.env.JWT_SECRET, {
+    expiresIn: "30d",
+  });
+};
+
+// REGISTER
 export const register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    const existing = await User.findOne({ email });
-    if (existing)
+    const userExists = await User.findOne({ email });
+    if (userExists) {
       return res.status(400).json({ message: "User already exists" });
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    }
 
     const user = await User.create({
       name,
       email,
-      password: hashedPassword,
-      otp,
-      otpExpires: Date.now() + 10 * 60 * 1000,
+      password,
     });
 
-    await sendEmail(
-  email,
-  "InkNova OTP Verification",
-  `Your OTP is: ${otp}`
-);
-
-console.log("OTP sent:", otp);
-
     res.status(201).json({
-      message: "OTP sent to email",
-      email,
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      token: generateToken(user._id), // 🔥 IMPORTANT
     });
 
   } catch (error) {
-    console.error("REGISTER ERROR:", error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: "Registration failed" });
   }
 };
 
@@ -104,5 +98,24 @@ export const login = async (req, res) => {
 
   } catch (error) {
     res.status(500).json({ message: "Login failed" });
+  }
+};
+
+export const getMe = async (req, res) => {
+  const user = await User.findById(req.user._id).select("-password");
+  res.json(user);
+};
+
+//activateSubscription
+export const activateSubscriptionController = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+
+    user.subscriptionActive = true;
+    await user.save();
+
+    res.json({ message: "Subscription activated" });
+  } catch (error) {
+    res.status(500).json({ message: "Subscription failed" });
   }
 };
