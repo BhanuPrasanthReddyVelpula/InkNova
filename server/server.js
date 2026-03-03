@@ -19,27 +19,13 @@ const app = express();
 
 
 // ✅ MIDDLEWARE
-
-
 const allowedOrigins = [
   "http://localhost:5173",
   "https://ink-nova.vercel.app"
 ];
 
 app.use(cors({
-  origin: function (origin, callback) {
-
-    if (!origin) return callback(null, true);
-
-    if (
-      origin.includes("vercel.app") ||
-      origin.includes("localhost")
-    ) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
+  origin: true,  // allows all origins safely for token-based API
   credentials: true
 }));
 
