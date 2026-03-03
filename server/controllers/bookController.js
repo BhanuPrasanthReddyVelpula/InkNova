@@ -133,7 +133,9 @@ export const checkBookAccess = async (req, res) => {
     }
 
     // 🔥 Return Cloudinary URL
-    res.json({ pdfUrl: book.pdfUrl });
+    const inlineUrl = book.pdfUrl.replace("/upload/", "/upload/fl_attachment:false/");
+
+res.json({ pdfUrl: inlineUrl });
 
   } catch (error) {
     console.error("Access error:", error);

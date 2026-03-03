@@ -130,17 +130,6 @@ useEffect(() => {
                 title="PDF Viewer"
               />
 
-              {/* Mobile fallback */}
-              <div className="block md:hidden text-center mt-4">
-                <a
-                  href={pdfUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-neonPink underline"
-                >
-                  Open PDF in new tab
-                </a>
-              </div>
             </>
           )}
         </div>
