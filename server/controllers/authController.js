@@ -88,20 +88,28 @@ export const login = async (req, res) => {
 
 export const activateSubscriptionController = async (req, res) => {
   try {
+    if (!req.user) {
+      return res.status(401).json({ message: "No token user" });
+    }
+
     const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
     user.subscriptionActive = true;
 
     await user.save();
 
-    res.json({
+    return res.json({
       message: "Subscription activated",
       subscriptionActive: true,
     });
 
   } catch (error) {
-    console.error("Subscription error:", error);
-    res.status(500).json({ message: error.message });
+    console.error("SUBSCRIBE ERROR:", error);
+    return res.status(500).json({ message: error.message });
   }
 };
 

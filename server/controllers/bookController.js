@@ -82,13 +82,24 @@ export const streamBook = async (req, res) => {
 // Unlock Book (Ad-based)
 export const unlockBook = async (req, res) => {
   try {
+    if (!req.user) {
+      return res.status(401).json({ message: "No token user" });
+    }
+
     const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
     const bookId = req.params.id;
 
-    const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
+    if (!user.adUnlocks) {
+      user.adUnlocks = [];
+    }
 
-    // Remove old unlock if exists
+    const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
+
     user.adUnlocks = user.adUnlocks.filter(
       (unlock) => unlock.book.toString() !== bookId
     );
@@ -100,14 +111,14 @@ export const unlockBook = async (req, res) => {
 
     await user.save();
 
-    res.json({
+    return res.json({
       message: "Book unlocked",
       adUnlocks: user.adUnlocks,
     });
 
   } catch (error) {
-    console.error("Unlock error:", error);
-    res.status(500).json({ message: error.message });
+    console.error("UNLOCK ERROR:", error);
+    return res.status(500).json({ message: error.message });
   }
 };
 
