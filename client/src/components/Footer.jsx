@@ -23,6 +23,12 @@ function Footer() {
           </a>
         </div>
 
+        <p className="mt-2 text-sm text-gray-400">
+          If you want to post your stories, Please contact to <i>CrazyWorld060</i> in Instagram.
+          Develpoed by your fan! 
+          Prasanth
+        </p>
+
         <p className="mt-6 text-xs text-gray-500">
           © {new Date().getFullYear()} InkNova. All rights reserved.
         </p>
