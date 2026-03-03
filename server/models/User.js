@@ -21,7 +21,10 @@ const userSchema = new mongoose.Schema(
       default: false,
     },
 
-    role: { type: String, default: "user" },
+    role: {
+      type: String,
+      default: "user",
+    },
 
     adUnlocks: [
       {
@@ -36,14 +39,10 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// 🔐 Hash password
+// 🔐 Hash password before save
 userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) {
-    next();
-  }
-if (userExists) {
-  return res.status(400).json({ message: "User already exists" });
-}
+  if (!this.isModified("password")) return next();
+
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
 });
