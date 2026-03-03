@@ -69,15 +69,19 @@ export const unlockBook = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const user = await User.findById(req.user._id);
-    if (!user) return res.status(404).json({ message: "User not found" });
+    if (!req.user) {
+      return res.status(401).json({ message: "Not authorized" });
+    }
 
-    // 30 minutes unlock
-    const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
     user.adUnlocks.push({
       book: id,
-      expiresAt,
+      expiresAt: new Date(Date.now() + 30 * 60 * 1000),
     });
 
     await user.save();
@@ -86,6 +90,6 @@ export const unlockBook = async (req, res) => {
 
   } catch (error) {
     console.error("Unlock error:", error);
-    res.status(500).json({ message: "Unlock failed" });
+    res.status(500).json({ message: error.message });
   }
 };

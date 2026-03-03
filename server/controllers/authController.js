@@ -1,7 +1,30 @@
 import User from "../models/User.js";
-import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import sendEmail from "../utils/sendEmail.js";
+
+export const protect = async (req, res, next) => {
+  let token;
+
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith("Bearer")
+  ) {
+    try {
+      token = req.headers.authorization.split(" ")[1];
+
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+      req.user = await User.findById(decoded.id).select("-password");
+
+      next();
+    } catch (error) {
+      return res.status(401).json({ message: "Not authorized" });
+    }
+  }
+
+  if (!token) {
+    return res.status(401).json({ message: "No token" });
+  }
+};
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -9,7 +32,6 @@ const generateToken = (id) => {
   });
 };
 
-// REGISTER
 export const register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -29,85 +51,44 @@ export const register = async (req, res) => {
       _id: user._id,
       name: user.name,
       email: user.email,
-      token: generateToken(user._id), // 🔥 IMPORTANT
+      subscriptionActive: user.subscriptionActive,
+      adUnlocks: user.adUnlocks,
+      token: generateToken(user._id),
     });
 
   } catch (error) {
-    res.status(500).json({ message: "Registration failed" });
+    res.status(500).json({ message: error.message });
   }
 };
 
-// VERIFY OTP
-export const verifyOtp = async (req, res) => {
-  try {
-    const { email, otp } = req.body;
-
-    const user = await User.findOne({ email });
-
-    if (!user)
-      return res.status(404).json({ message: "User not found" });
-
-    if (user.otp !== otp)
-      return res.status(400).json({ message: "Invalid OTP" });
-
-    if (user.otpExpires < Date.now())
-      return res.status(400).json({ message: "OTP expired" });
-
-    user.isVerified = true;
-    user.otp = undefined;
-    user.otpExpires = undefined;
-
-    await user.save();
-
-    res.json({ message: "Account verified successfully" });
-
-  } catch (error) {
-    res.status(500).json({ message: "Verification failed" });
-  }
-};
-
-// LOGIN
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
     const user = await User.findOne({ email });
-    if (!user)
-      return res.status(400).json({ message: "Invalid credentials" });
 
-    if (!user.isVerified) {
-      return res.status(403).json({
-        message: "Please verify your email first",
+    if (user && (await user.matchPassword(password))) {
+      return res.json({
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        subscriptionActive: user.subscriptionActive,
+        adUnlocks: user.adUnlocks,
+        token: generateToken(user._id),
       });
+    } else {
+      return res.status(401).json({ message: "Invalid email or password" });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch)
-      return res.status(400).json({ message: "Invalid credentials" });
-
-    const token = jwt.sign(
-      { id: user._id },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
-    );
-
-    res.json({
-      token,
-      user,
-    });
-
   } catch (error) {
-    res.status(500).json({ message: "Login failed" });
+    console.error("Login error:", error);
+    res.status(500).json({ message: error.message });
   }
 };
 
-export const getMe = async (req, res) => {
-  const user = await User.findById(req.user._id).select("-password");
-  res.json(user);
-};
-
-//activateSubscription
 export const activateSubscriptionController = async (req, res) => {
+  console.log("REQ.USER:", req.user);
+
   try {
     const user = await User.findById(req.user._id);
 
@@ -115,7 +96,18 @@ export const activateSubscriptionController = async (req, res) => {
     await user.save();
 
     res.json({ message: "Subscription activated" });
+
   } catch (error) {
-    res.status(500).json({ message: "Subscription failed" });
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const getMe = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select("-password");
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };
